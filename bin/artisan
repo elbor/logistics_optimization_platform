@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# php artisan у Docker-контейнері. Приклад: ./bin/artisan migrate
+set -euo pipefail
+cd "$(dirname "$0")/.."
+exec docker compose -f infra/compose.yaml run --rm app php artisan "$@"

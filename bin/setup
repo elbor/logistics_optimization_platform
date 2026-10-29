@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Перше налаштування: збирає образ і створює Laravel-проєкт у backend/, якщо його ще немає.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+docker compose -f infra/compose.yaml build
+
+if [ ! -f backend/artisan ]; then
+  echo "Створюю Laravel-проєкт у backend/ ..."
+  docker compose -f infra/compose.yaml run --rm app sh -c \
+    'composer create-project --no-interaction laravel/laravel /tmp/app && cp -a /tmp/app/. /var/www/backend/'
+fi
+
+docker compose -f infra/compose.yaml run --rm app php artisan migrate --force
+
+echo
+echo "Готово. Запуск: docker compose -f infra/compose.yaml up"
+echo "Сайт: http://localhost:8000"
