@@ -20,6 +20,11 @@ class Store extends Model
     /** @use HasFactory<StoreFactory> */
     use HasFactory;
 
+    /** Як DEFAULT у базі, щоб щойно створена модель не мала null до refresh(). */
+    protected $attributes = [
+        'is_archived' => false,
+    ];
+
     protected function casts(): array
     {
         return [

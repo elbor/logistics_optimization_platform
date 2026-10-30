@@ -35,6 +35,16 @@ class UserFactory extends Factory
     }
 
     /**
+     * Indicate that the user is deactivated.
+     */
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_active' => false,
+        ]);
+    }
+
+    /**
      * Indicate that the user is a driver (drivers must have a phone).
      */
     public function driver(): static

@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Enums\RouteStatus;
 use Database\Factories\DeliveryRouteFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -48,6 +50,33 @@ class DeliveryRoute extends Model
             'started_received_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Адмін може змінювати й видаляти маршрут, поки водій його не почав (видалення так само блокує тригер у базі).
+     */
+    public function isEditable(): bool
+    {
+        return in_array($this->status, [RouteStatus::Draft, RouteStatus::Assigned], true);
+    }
+
+    /**
+     * Водій бачить свої маршрути, крім чернеток — чернетка ще робоча копія адміна.
+     */
+    public function isVisibleToDriver(User $driver): bool
+    {
+        return $this->driver_id === $driver->id && $this->status !== RouteStatus::Draft;
+    }
+
+    /**
+     * Те саме правило, що й isVisibleToDriver(), для списків.
+     *
+     * @param  Builder<self>  $query
+     */
+    #[Scope]
+    protected function visibleToDriver(Builder $query, User $driver): void
+    {
+        $query->where('driver_id', $driver->id)->where('status', '!=', RouteStatus::Draft);
     }
 
     /**

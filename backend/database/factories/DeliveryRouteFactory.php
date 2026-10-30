@@ -35,4 +35,30 @@ class DeliveryRouteFactory extends Factory
             'geometry' => ['type' => 'LineString', 'coordinates' => [[30.52, 50.45], [30.60, 50.40]]],
         ];
     }
+
+    public function assigned(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => RouteStatus::Assigned,
+        ]);
+    }
+
+    public function inProgress(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => RouteStatus::InProgress,
+            'started_at' => now(),
+            'started_received_at' => now(),
+        ]);
+    }
+
+    public function completed(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => RouteStatus::Completed,
+            'started_at' => now()->subHours(3),
+            'started_received_at' => now()->subHours(3),
+            'completed_at' => now(),
+        ]);
+    }
 }

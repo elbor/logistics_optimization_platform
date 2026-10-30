@@ -15,6 +15,11 @@ class Vehicle extends Model
     /** @use HasFactory<VehicleFactory> */
     use HasFactory;
 
+    /** Як DEFAULT у базі, щоб щойно створена модель не мала null до refresh(). */
+    protected $attributes = [
+        'is_active' => true,
+    ];
+
     protected function casts(): array
     {
         return [
