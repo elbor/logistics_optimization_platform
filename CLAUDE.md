@@ -57,10 +57,11 @@ PHP і Composer працюють **лише в Docker** — на машині р
 | Дія | Команда (з кореня репозиторію) |
 | --- | --- |
 | Перше налаштування (образ + Laravel + міграції) | `./bin/setup` |
-| Запустити бекенд і базу | `docker compose -f infra/compose.yaml up` → http://localhost:8000 |
+| Запустити бекенд, планувальник і базу | `docker compose -f infra/compose.yaml up` → http://localhost:8000 (сервіс `scheduler` виконує `schedule:work`; розклад — `backend/routes/console.php`) |
 | Зупинити | `docker compose -f infra/compose.yaml down` |
 | Artisan | `./bin/artisan <команда>`, напр. `./bin/artisan migrate` |
 | Composer | `./bin/composer <команда>`, напр. `./bin/composer require ...` |
+| Розклад задач | `./bin/artisan schedule:list` |
 | Тести бекенду | `./bin/artisan test` (база `logistics_test`, не база розробки) |
 
 База: PostgreSQL + PostGIS у контейнері `db`, з хоста — `localhost:5432`, користувач/пароль/база `logistics` / `secret` / `logistics` (лише для розробки). Тести працюють з окремою базою `logistics_test`; її створює `infra/postgres/init/02-test-db.sql` при першій ініціалізації тому (init-скрипти копіюються в образ, тож після їхньої зміни — `docker compose -f infra/compose.yaml build db`).

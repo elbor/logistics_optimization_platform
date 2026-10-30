@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Http\Requests\Api\Driver\LoginRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\PersonalAccessToken;
 use Tests\TestCase;
@@ -183,6 +184,35 @@ class DriverAuthTest extends TestCase
 
         $this->travel(LoginRequest::DECAY_SECONDS + 1)->seconds();
         $this->login($driver->email)->assertOk();
+    }
+
+    public function test_failed_attempts_from_one_ip_are_throttled_across_emails(): void
+    {
+        // Перебір різних email: лічильник email + IP не спрацює, лише загальний на IP.
+        // Попередньо заповнюємо лічильник (кожна справжня невдала спроба — 200 мс Timebox)
+        for ($i = 0; $i < LoginRequest::MAX_ATTEMPTS_PER_IP - 1; $i++) {
+            RateLimiter::hit(LoginRequest::ipThrottleKey('127.0.0.1'), LoginRequest::DECAY_SECONDS);
+        }
+
+        $this->login('first-unknown@example.com', 'wrong-password')->assertUnauthorized();
+        $driver = $this->driver();
+        // Тепер заблоковано будь-який вхід з цієї IP, навіть правильний
+        $this->login($driver->email)->assertTooManyRequests();
+
+        $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.2'])->login($driver->email)->assertOk();
+    }
+
+    public function test_successful_login_does_not_reset_ip_counter(): void
+    {
+        $driver = $this->driver();
+        for ($i = 0; $i < LoginRequest::MAX_ATTEMPTS_PER_IP - 1; $i++) {
+            RateLimiter::hit(LoginRequest::ipThrottleKey('127.0.0.1'), LoginRequest::DECAY_SECONDS);
+        }
+
+        $this->login($driver->email)->assertOk();
+        $this->login('other@example.com', 'wrong-password')->assertUnauthorized();
+
+        $this->login($driver->email)->assertTooManyRequests();
     }
 
     public function test_successful_login_resets_failed_attempts(): void

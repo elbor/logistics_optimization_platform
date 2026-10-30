@@ -2,27 +2,37 @@
 # Запуск з кореня репозиторію: docker compose -f infra/compose.yaml up
 name: logistics
 
+# Спільне для app і scheduler: один образ, той самий код і змінні
+x-php: &php
+  build:
+    context: ./php
+  image: logistics-app
+  working_dir: /var/www/backend
+  volumes:
+    - ../backend:/var/www/backend
+  environment:
+    # Змінні оточення мають пріоритет над backend/.env
+    DB_CONNECTION: pgsql
+    DB_HOST: db
+    DB_PORT: "5432"
+    DB_DATABASE: logistics
+    DB_USERNAME: logistics
+    DB_PASSWORD: secret
+  depends_on:
+    db:
+      condition: service_healthy
+
 services:
   app:
-    build:
-      context: ./php
-    working_dir: /var/www/backend
-    volumes:
-      - ../backend:/var/www/backend
+    <<: *php
     ports:
       - "8000:8000"
-    environment:
-      # Змінні оточення мають пріоритет над backend/.env
-      DB_CONNECTION: pgsql
-      DB_HOST: db
-      DB_PORT: "5432"
-      DB_DATABASE: logistics
-      DB_USERNAME: logistics
-      DB_PASSWORD: secret
-    depends_on:
-      db:
-        condition: service_healthy
     command: php artisan serve --host=0.0.0.0 --port=8000
+
+  # Планувальник Laravel (routes/console.php): щохвилини запускає задачі за розкладом
+  scheduler:
+    <<: *php
+    command: php artisan schedule:work
 
   db:
     build:

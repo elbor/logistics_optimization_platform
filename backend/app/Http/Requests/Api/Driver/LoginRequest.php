@@ -14,6 +14,9 @@ class LoginRequest extends FormRequest
     /** Невдалих спроб на пару email + IP, після чого вхід блокується на DECAY_SECONDS. */
     public const MAX_ATTEMPTS = 5;
 
+    /** Невдалих спроб з однієї IP на будь-які email (перебір акаунтів). */
+    public const MAX_ATTEMPTS_PER_IP = 30;
+
     public const DECAY_SECONDS = 60;
 
     /**
@@ -48,15 +51,21 @@ class LoginRequest extends FormRequest
      */
     public function authenticate(): User
     {
-        $key = $this->throttleKey();
+        $emailKey = $this->throttleKey();
+        $limits = [
+            $emailKey => self::MAX_ATTEMPTS,
+            self::ipThrottleKey($this->ip()) => self::MAX_ATTEMPTS_PER_IP,
+        ];
 
-        if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
-            $seconds = RateLimiter::availableIn($key);
+        foreach ($limits as $key => $maxAttempts) {
+            if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
+                $seconds = RateLimiter::availableIn($key);
 
-            throw new ThrottleRequestsException(
-                __('auth.throttle', ['seconds' => $seconds]),
-                headers: ['Retry-After' => $seconds],
-            );
+                throw new ThrottleRequestsException(
+                    __('auth.throttle', ['seconds' => $seconds]),
+                    headers: ['Retry-After' => $seconds],
+                );
+            }
         }
 
         // validate() не створює сесію і вирівнює час відповіді (Timebox)
@@ -66,12 +75,15 @@ class LoginRequest extends FormRequest
         $user = $guard->getLastAttempted();
 
         if (! $valid || ! $user->canUseDriverApi()) {
-            RateLimiter::hit($key, self::DECAY_SECONDS);
+            foreach (array_keys($limits) as $key) {
+                RateLimiter::hit($key, self::DECAY_SECONDS);
+            }
 
             throw new HttpException(401, __('auth.failed'));
         }
 
-        RateLimiter::clear($key);
+        // Лічильник IP не скидається: інакше вхід у власний акаунт обнуляв би перебір чужих
+        RateLimiter::clear($emailKey);
 
         return $user;
     }
@@ -79,5 +91,10 @@ class LoginRequest extends FormRequest
     private function throttleKey(): string
     {
         return 'driver-login|'.$this->input('email').'|'.$this->ip();
+    }
+
+    public static function ipThrottleKey(?string $ip): string
+    {
+        return 'driver-login-ip|'.$ip;
     }
 }
