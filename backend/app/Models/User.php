@@ -17,6 +17,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 
 // role і is_active не масово присвоювані: їх змінюють лише явно (команда, дія адміна)
 #[Fillable(['name', 'email', 'phone', 'password'])]
@@ -24,7 +25,7 @@ use Illuminate\Support\Str;
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /** Як DEFAULT у базі, щоб щойно створена модель не мала null до refresh(). */
     protected $attributes = [
@@ -46,7 +47,7 @@ class User extends Authenticatable implements FilamentUser
         static::updated(function (User $user) {
             if ($user->wasChanged('is_active') && ! $user->is_active) {
                 $user->destroySessions();
-                // Токени Sanctum водія — разом із підключенням Sanctum (SPEC 7.2)
+                $user->tokens()->delete();
             }
         });
     }
