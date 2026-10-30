@@ -76,9 +76,9 @@ class DriverAuthTest extends TestCase
     {
         $this->postJson('/api/driver/login', ['email' => 'not-an-email'])
             ->assertUnprocessable()
-            ->assertJsonPath('errors.email.0', 'Поле «Електронна пошта» має містити правильну адресу електронної пошти.')
-            ->assertJsonPath('errors.password.0', 'Поле «Пароль» обов\'язкове.')
-            ->assertJsonPath('errors.device_name.0', 'Поле «Назва пристрою» обов\'язкове.');
+            ->assertJsonPath('errors.email.0', 'Поле «електронна пошта» має містити правильну адресу електронної пошти.')
+            ->assertJsonPath('errors.password.0', 'Поле «пароль» обов\'язкове.')
+            ->assertJsonPath('errors.device_name.0', 'Поле «назва пристрою» обов\'язкове.');
     }
 
     public function test_logout_revokes_only_current_token(): void

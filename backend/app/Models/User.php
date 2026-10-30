@@ -74,8 +74,13 @@ class User extends Authenticatable implements FilamentUser
     protected function email(): Attribute
     {
         return Attribute::make(
-            set: fn (?string $value) => $value === null ? null : mb_strtolower(trim($value)),
+            set: fn (?string $value) => $value === null ? null : self::normalizeEmail($value),
         );
+    }
+
+    public static function normalizeEmail(string $value): string
+    {
+        return mb_strtolower(trim($value));
     }
 
     public function isAdmin(): bool

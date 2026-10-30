@@ -43,8 +43,13 @@ class Vehicle extends Model
     protected function plate(): Attribute
     {
         return Attribute::make(
-            set: fn (string $value) => strtr(mb_strtoupper(preg_replace('/\s+/u', '', $value)), self::CYRILLIC_TO_LATIN),
+            set: fn (string $value) => self::normalizePlate($value),
         );
+    }
+
+    public static function normalizePlate(string $value): string
+    {
+        return strtr(mb_strtoupper(preg_replace('/\s+/u', '', $value)), self::CYRILLIC_TO_LATIN);
     }
 
     /**
