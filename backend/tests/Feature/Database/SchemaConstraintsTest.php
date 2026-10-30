@@ -120,6 +120,12 @@ class SchemaConstraintsTest extends TestCase
         $this->vehicle(['plate' => 'aa 1234 bb']);
     }
 
+    public function test_plate_must_not_contain_cyrillic_lookalikes(): void
+    {
+        $this->expectViolation('vehicles_plate_latin_check');
+        $this->vehicle(['plate' => 'АА1234ВВ']);
+    }
+
     public function test_blank_external_id_is_rejected(): void
     {
         $this->expectViolation('stores_external_id_1c_not_blank_check');

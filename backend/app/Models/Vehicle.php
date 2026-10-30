@@ -24,12 +24,21 @@ class Vehicle extends Model
     }
 
     /**
-     * Номер — верхній регістр без пробілів (так само перевіряє CHECK у базі).
+     * Кириличні літери номерних знаків, що мають латинських двійників.
+     */
+    private const CYRILLIC_TO_LATIN = [
+        'А' => 'A', 'В' => 'B', 'Е' => 'E', 'І' => 'I', 'К' => 'K', 'М' => 'M',
+        'Н' => 'H', 'О' => 'O', 'Р' => 'P', 'С' => 'C', 'Т' => 'T', 'Х' => 'X',
+    ];
+
+    /**
+     * Номер — верхній регістр, без пробілів, латиницею: «АА1234ВВ» кирилицею і латиницею — один номер
+     * (так само перевіряють CHECK-обмеження в базі).
      */
     protected function plate(): Attribute
     {
         return Attribute::make(
-            set: fn (string $value) => mb_strtoupper(preg_replace('/\s+/u', '', $value)),
+            set: fn (string $value) => strtr(mb_strtoupper(preg_replace('/\s+/u', '', $value)), self::CYRILLIC_TO_LATIN),
         );
     }
 

@@ -32,9 +32,16 @@ class InputNormalizationTest extends TestCase
 
     public function test_international_phone_keeps_its_country(): void
     {
-        $user = new User(['phone' => '+44 7911 123456']);
+        $user = new User(['phone' => '+44 7400 123456']);
 
-        $this->assertSame('+447911123456', $user->phone);
+        $this->assertSame('+447400123456', $user->phone);
+    }
+
+    public function test_local_british_phone_becomes_e164(): void
+    {
+        $user = new User(['phone' => '07400 123456']);
+
+        $this->assertSame('+447400123456', $user->phone);
     }
 
     public function test_invalid_phone_is_rejected(): void
@@ -60,9 +67,18 @@ class InputNormalizationTest extends TestCase
 
     public function test_plate_is_uppercased_without_spaces(): void
     {
-        $vehicle = new Vehicle(['plate' => ' аа 1234 вв ']);
+        $vehicle = new Vehicle(['plate' => ' aa 1234 bb ']);
 
-        $this->assertSame('АА1234ВВ', $vehicle->plate);
+        $this->assertSame('AA1234BB', $vehicle->plate);
+    }
+
+    public function test_cyrillic_plate_letters_become_latin_lookalikes(): void
+    {
+        $cyrillic = new Vehicle(['plate' => 'АВЕІКМНОРСТХ 1234']);
+        $lowercase = new Vehicle(['plate' => 'аа 1234 вв']);
+
+        $this->assertSame('ABEIKMHOPCTX1234', $cyrillic->plate);
+        $this->assertSame('AA1234BB', $lowercase->plate);
     }
 
     public function test_blank_optional_text_becomes_null(): void
