@@ -62,6 +62,7 @@ PHP і Composer працюють **лише в Docker** — на машині р
 | Artisan | `./bin/artisan <команда>`, напр. `./bin/artisan migrate` |
 | Composer | `./bin/composer <команда>`, напр. `./bin/composer require ...` |
 | Розклад задач | `./bin/artisan schedule:list` |
+| Опублікувати ассети Filament (після зміни `backend/resources/{js,css}/filament`, `backend/resources/vendor`) | `./bin/artisan filament:assets` |
 | Тести бекенду | `./bin/artisan test` (база `logistics_test`, не база розробки) |
 
 База: PostgreSQL + PostGIS у контейнері `db`, з хоста — `localhost:5432`, користувач/пароль/база `logistics` / `secret` / `logistics` (лише для розробки). Тести працюють з окремою базою `logistics_test`; її створює `infra/postgres/init/02-test-db.sql` при першій ініціалізації тому (init-скрипти копіюються в образ, тож після їхньої зміни — `docker compose -f infra/compose.yaml build db`).

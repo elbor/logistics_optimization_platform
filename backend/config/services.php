@@ -39,4 +39,13 @@ return [
         'key' => env('ORS_API_KEY'),
     ],
 
+    // Геокодування. Правила публічного сервера: https://operations.osmfoundation.org/policies/nominatim/
+    'nominatim' => [
+        'base_url' => env('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org'),
+        // User-Agent: «<app_name> (<contact>)»; без контакту запити не надсилаються
+        'app_name' => env('NOMINATIM_APP_NAME', 'TeaCoffeeLogistics'),
+        'contact' => env('NOMINATIM_CONTACT'),
+        'timeout' => (int) env('NOMINATIM_TIMEOUT_SECONDS', 10),
+    ],
+
 ];

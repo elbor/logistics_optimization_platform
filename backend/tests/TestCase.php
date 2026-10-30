@@ -3,10 +3,19 @@
 namespace Tests;
 
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 abstract class TestCase extends BaseTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Жодних справжніх HTTP-запитів (Nominatim, ORS): лише Http::fake()
+        Http::preventStrayRequests();
+    }
+
     /**
      * Запобіжник: RefreshDatabase стирає базу, тож тести йдуть лише в logistics_test.
      */
