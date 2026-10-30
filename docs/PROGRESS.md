@@ -3,7 +3,7 @@
 ## Зараз
 
 - **Етап:** 2. Бекенд-основа
-- **Наступний крок:** міграції за `docs/data-model.md`
+- **Наступний крок:** моделі й enum-и статусів (касти, мутатор email, нормалізація телефонів через `propaganistas/laravel-phone`)
 - **Блокери:** —
 
 ## Етапи
@@ -27,8 +27,8 @@
 - [ ] Міграції й моделі (`docs/data-model.md`)
   - [x] Схема бази погоджена, `docs/data-model.md`; SPEC оновлено
   - [x] Рев'ю схеми (schema-reviewer), правки внесено
-  - [ ] Тестова база `logistics_test` (PostgreSQL), `phpunit.xml`
-  - [ ] Міграції
+  - [x] Тестова база `logistics_test` (PostgreSQL), `phpunit.xml`, запобіжник у `tests/TestCase.php`
+  - [x] Міграції + тести обмежень бази (`tests/Feature/Database/SchemaConstraintsTest.php`)
   - [ ] Моделі й enum-и статусів
 - [ ] Ролі admin / driver, політики доступу
 - [ ] Встановити Filament, вхід адміна
@@ -79,7 +79,7 @@
 | 2026-10-30 | Скасування маршруту = видалення (лише `draft` / `assigned`) | `docs/data-model.md` |
 | 2026-10-30 | Вхід за email для адміна й водія; роль водія в маршруті перевіряє політика, не БД | `docs/data-model.md` |
 | 2026-10-30 | Після рев'ю схеми: звичайний UNIQUE порядку точок (перебудова = видалити й вставити), тригер проти видалення розпочатих маршрутів, email у нижньому регістрі + CHECK, телефони E.164 через `propaganistas/laravel-phone`, CHECK проти порожніх рядків, час старту/завершення з телефона + `*_received_at` | `docs/data-model.md` |
-| 2026-10-30 | Тести — на PostgreSQL в окремій базі `logistics_test`, не SQLite | `docs/data-model.md`, `phpunit.xml` |
+| 2026-10-30 | Тести — на PostgreSQL в окремій базі `logistics_test`, не SQLite; змінні БД у `phpunit.xml` задаються і в `<env force>`, і в `<server>` (Laravel читає `$_SERVER` першим); `TestCase` відмовляється працювати з іншою базою | `docs/data-model.md`, `phpunit.xml` |
 
 ## Журнал
 
@@ -91,3 +91,4 @@
 | 2026-10-29 | Ключ OpenRouteService: `ORS_API_KEY` у `.env`, блок `ors` у `config/services.php`, порожній ключ у `.env.example` |
 | 2026-10-30 | Схема бази: `docs/data-model.md`; SPEC оновлено (розділи 2, 3.4, 3.5, 4, 5, 6, 7.2, 10, 11) |
 | 2026-10-30 | Рев'ю схеми (schema-reviewer), правки в `docs/data-model.md` |
+| 2026-10-30 | Тестова база `logistics_test`; міграції всіх таблиць за `docs/data-model.md` (CHECK, часткові індекси, тригер проти видалення розпочатих маршрутів); 16 тестів обмежень; фабрика й сидер з ролями |

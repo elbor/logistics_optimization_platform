@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -13,18 +14,26 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            $table->text('name');
+            $table->text('email')->unique();
+            $table->timestampTz('email_verified_at')->nullable();
+            $table->text('phone')->nullable();
+            $table->text('password');
+            $table->text('role');
+            $table->boolean('is_active')->default(true);
             $table->rememberToken();
-            $table->timestamps();
+            $table->timestampsTz();
         });
+
+        DB::statement("ALTER TABLE users ADD CONSTRAINT users_email_lowercase_check CHECK (email = lower(email))");
+        DB::statement("ALTER TABLE users ADD CONSTRAINT users_phone_e164_check CHECK (phone ~ '^\\+[1-9][0-9]{6,14}$')");
+        DB::statement("ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'driver'))");
+        DB::statement("ALTER TABLE users ADD CONSTRAINT users_driver_phone_check CHECK (role <> 'driver' OR phone IS NOT NULL)");
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
-            $table->timestamp('created_at')->nullable();
+            $table->timestampTz('created_at')->nullable();
         });
 
         Schema::create('sessions', function (Blueprint $table) {

@@ -61,8 +61,8 @@ PHP і Composer працюють **лише в Docker** — на машині р
 | Зупинити | `docker compose -f infra/compose.yaml down` |
 | Artisan | `./bin/artisan <команда>`, напр. `./bin/artisan migrate` |
 | Composer | `./bin/composer <команда>`, напр. `./bin/composer require ...` |
-| Тести бекенду | `./bin/artisan test` |
+| Тести бекенду | `./bin/artisan test` (база `logistics_test`, не база розробки) |
 
-База: PostgreSQL + PostGIS у контейнері `db`, з хоста — `localhost:5432`, користувач/пароль/база `logistics` / `secret` / `logistics` (лише для розробки).
+База: PostgreSQL + PostGIS у контейнері `db`, з хоста — `localhost:5432`, користувач/пароль/база `logistics` / `secret` / `logistics` (лише для розробки). Тести працюють з окремою базою `logistics_test`; її створює `infra/postgres/init/02-test-db.sql` при першій ініціалізації тому (init-скрипти копіюються в образ, тож після їхньої зміни — `docker compose -f infra/compose.yaml build db`).
 
 _Команди Flutter додати після створення `mobile/`._
