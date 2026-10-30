@@ -6,6 +6,7 @@ namespace App\Models;
 use App\Casts\E164Phone;
 use App\Enums\UserRole;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -14,11 +15,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 // role і is_active не масово присвоювані: їх змінюють лише явно (команда, дія адміна)
 #[Fillable(['name', 'email', 'phone', 'password'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -27,6 +30,26 @@ class User extends Authenticatable
     protected $attributes = [
         'is_active' => true,
     ];
+
+    /**
+     * Деактивація будь-яким шляхом (адмінка, команда, tinker) виходить з усіх пристроїв.
+     */
+    protected static function booted(): void
+    {
+        static::updating(function (User $user) {
+            if ($user->isDirty('is_active') && ! $user->is_active) {
+                // Cookie «Запам'ятати мене» більше не відновить вхід
+                $user->setRememberToken(Str::random(60));
+            }
+        });
+
+        static::updated(function (User $user) {
+            if ($user->wasChanged('is_active') && ! $user->is_active) {
+                $user->destroySessions();
+                // Токени Sanctum водія — разом із підключенням Sanctum (SPEC 7.2)
+            }
+        });
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -66,11 +89,27 @@ class User extends Authenticatable
 
     /**
      * Вхід в адмін-панель: лише активний адмін.
-     * Сигнатура сумісна з Filament\Models\Contracts\FilamentUser (Filament ще не встановлено).
+     * Filament перевіряє це і при вході, і в кожному запиті до панелі.
      */
     public function canAccessPanel(?Panel $panel = null): bool
     {
         return $this->is_active && $this->isAdmin();
+    }
+
+    /**
+     * Знищує всі сесії користувача (SPEC 7.1). Лише драйвер database знає, чия сесія;
+     * з іншими драйверами (array у тестах) вхід блокує canAccessPanel() у кожному запиті.
+     */
+    public function destroySessions(): void
+    {
+        if (config('session.driver') !== 'database') {
+            return;
+        }
+
+        DB::connection(config('session.connection'))
+            ->table(config('session.table'))
+            ->where('user_id', $this->getKey())
+            ->delete();
     }
 
     /**
